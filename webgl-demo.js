@@ -1,13 +1,15 @@
 var positions = []
+noise.seed(Math.random());
+var frame = 0;
 
-const grid_x = 20
-const grid_y = 20
+const grid_x = 30
+const grid_y = 30
 
 main()
 
 function main() {
     const canvas = document.querySelector('#glcanvas')
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+    const gl = canvas.getContext('webgl', {antialias:false}) || canvas.getContext('experimental-webgl')
 
     if (!gl) {
         alert('Unable to initialize WebGL. Your browser or machine may not support it.')
@@ -15,25 +17,25 @@ function main() {
     }
 
     const vertex_shader_source = `
-        attribute vec4 aVertexPosition
-        attribute vec4 aVertexColor
+        attribute vec4 aVertexPosition;
+        attribute vec4 aVertexColor;
 
-        uniform mat4 uModelViewMatrix
-        uniform mat4 uProjectionMatrix
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
 
-        varying lowp vec4 vColor
+        varying lowp vec4 vColor;
 
         void main(void) {
-            gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition
-            vColor = aVertexColor
+            gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+            vColor = aVertexColor;
         }
     `
 
     const fragment_shader_source = `
-        varying lowp vec4 vColor
+        varying lowp vec4 vColor;
 
         void main(void) {
-            gl_FragColor = vColor
+            gl_FragColor = vColor;
         }
     `
 
@@ -54,6 +56,7 @@ function main() {
     var buffers = initBuffers(gl)
 
     function render() {
+        frame++;
         buffers = movePoints(gl, buffers)
         drawScene(gl, programInfo, buffers)
         requestAnimationFrame(render)
@@ -73,7 +76,7 @@ function initBuffers(gl) {
         positions = positions.concat(
                 (x - (grid_x-1)/2) / grid_x * a,
                 ((grid_y-1)/2 - y) / grid_y * b,
-                (Math.random()-0.5)/2
+                0
             )
         }
     }
@@ -139,7 +142,7 @@ function movePoints(gl, buffers) {
         positions_new = positions_new.concat(
                 (x - (grid_x-1)/2) / grid_x * a,
                 ((grid_y-1)/2 - y) / grid_y * b,
-                (Math.random()-0.5)/4
+                noise.simplex2(x/18 + frame/200, y/18 + frame/200)/4
             )
         }
     }
