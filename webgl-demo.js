@@ -1,4 +1,4 @@
-var cubeRotation = 0.0;
+var positions = []
 
 const grid_x = 20
 const grid_y = 20
@@ -51,9 +51,10 @@ function main() {
         },
     };
 
-    const buffers = initBuffers(gl);
+    var buffers = initBuffers(gl);
 
     function render(now) {
+        buffers = movePoints(gl, buffers)
         drawScene(gl, programInfo, buffers);
         requestAnimationFrame(render);
     }
@@ -63,7 +64,7 @@ function main() {
 function initBuffers(gl) {
 
     // Positions
-    var positions = [];
+    positions = [];
     var a = 5
     var b = 5
 
@@ -118,12 +119,43 @@ function initBuffers(gl) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
-    
+
     return {
         position: positionBuffer,
         color: colorBuffer,
         indices: indexBuffer,
     };
+}
+
+function movePoints(gl, buffers) {
+
+    var positions_new = []
+    var a = 5
+    var b = 5
+    var i = 0
+
+    for (var y=0; y<grid_y; y++) {
+        for (var x=0; x<grid_x; x++) {
+        positions_new = positions_new.concat(
+                (x - (grid_x-1)/2) / grid_x * a,
+                ((grid_y-1)/2 - y) / grid_y * b,
+                (Math.random()-0.5)/4
+            )
+        }
+    }
+
+    positions = positions_new
+
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    return {
+        position: positionBuffer,
+        color: buffers.color,
+        indices: buffers.indices,
+    }
+
 }
 
 function drawScene(gl, programInfo, buffers) {
@@ -151,6 +183,11 @@ function drawScene(gl, programInfo, buffers) {
     mat4.translate(modelViewMatrix,
                    modelViewMatrix,
                    [-0.0, 0.0, -6.0]);
+
+    mat4.rotate(modelViewMatrix,  // destination matrix
+                modelViewMatrix,  // matrix to rotate
+                -Math.PI/4,     // amount to rotate in radians
+                [1, 0, 0]);       // axis to rotate around (Z)
 
     {
         const numComponents = 3;
