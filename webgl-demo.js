@@ -3,8 +3,8 @@ var positions = []
 noise.seed(Math.random());
 var frame = 0;
 
-const grid_x = 5
-const grid_y = 5
+const grid_x = 100
+const grid_y = 100
 
 const size_x = 5
 const size_y = 5
@@ -33,7 +33,7 @@ function preparePoints() {
     
     for (var y=0; y<grid_y; y++) {
         for (var x=0; x<grid_x; x++) {
-            coordinates.concat({
+            coordinates = coordinates.concat({
                 x: (x - (grid_x-1)/2) / grid_x * size_x,
                 y: ((grid_y-1)/2 - y) / grid_y * size_y,
                 z: 0
@@ -96,22 +96,21 @@ function prepareProgram(gl) {
 
 }
 
+function coordinatesToPositions() {
+    for (var i=0; i<coordinates.length; i++) {
+        positions = positions.concat(
+            coordinates[i].x,
+            coordinates[i].y,
+            coordinates[i].z
+        )
+    }
+}
+
 function initBuffers(gl) {
 
     // Positions
-    positions = []
+    coordinatesToPositions()
 
-    for (var y=0; y<grid_y; y++) {
-        for (var x=0; x<grid_x; x++) {
-        positions = positions.concat(
-                (x - (grid_x-1)/2) / grid_x * size_x,
-                ((grid_y-1)/2 - y) / grid_y * size_y,
-                0
-            )
-        }
-    }
-
-    console.log(positions)
     const positionBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
@@ -124,7 +123,6 @@ function initBuffers(gl) {
         colors = colors.concat(1,1,1,1)
     }
 
-    console.log(colors)
     const colorBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW)
@@ -147,7 +145,6 @@ function initBuffers(gl) {
             )
         }
     }
-    console.log(indices)
     const indexBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
@@ -162,19 +159,10 @@ function initBuffers(gl) {
 
 function movePoints(gl, buffers) {
 
-    var positions_new = []
-
-    for (var y=0; y<grid_y; y++) {
-        for (var x=0; x<grid_x; x++) {
-        positions_new = positions_new.concat(
-                (x - (grid_x-1)/2) / grid_x * size_x,
-                ((grid_y-1)/2 - y) / grid_y * size_y,
-                noise.simplex2(x/18 + frame/200, y/18 + frame/200)/4
-            )
-        }
+    for (var i=0; i<coordinates.length; i++) {
+        coordinates[i].z = noise.simplex2(coordinates[i].x + frame/200, coordinates[i].y + frame/200)/4
+        positions[3*i+2] = coordinates[i].z
     }
-
-    positions = positions_new
 
     const positionBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
