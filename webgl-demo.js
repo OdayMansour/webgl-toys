@@ -1,13 +1,49 @@
+var coordinates = []
 var positions = []
 noise.seed(Math.random());
 var frame = 0;
 
-const grid_x = 30
-const grid_y = 30
+const grid_x = 5
+const grid_y = 5
+
+const size_x = 5
+const size_y = 5
 
 main()
 
 function main() {
+
+    const gl = prepareCanvas()
+    const programInfo = prepareProgram(gl)
+    
+    preparePoints()
+    
+    var buffers = initBuffers(gl)
+
+    function render() {
+        frame++;
+        buffers = movePoints(gl, buffers)
+        drawScene(gl, programInfo, buffers)
+        requestAnimationFrame(render)
+    }
+    requestAnimationFrame(render)
+}
+
+function preparePoints() {
+    
+    for (var y=0; y<grid_y; y++) {
+        for (var x=0; x<grid_x; x++) {
+            coordinates.concat({
+                x: (x - (grid_x-1)/2) / grid_x * size_x,
+                y: ((grid_y-1)/2 - y) / grid_y * size_y,
+                z: 0
+            })
+        }
+    }
+    return 
+}
+
+function prepareCanvas() {
     const canvas = document.querySelector('#glcanvas')
     const gl = canvas.getContext('webgl', {antialias:false}) || canvas.getContext('experimental-webgl')
 
@@ -15,6 +51,11 @@ function main() {
         alert('Unable to initialize WebGL. Your browser or machine may not support it.')
         return
     }
+
+    return gl
+}
+
+function prepareProgram(gl) {
 
     const vertex_shader_source = `
         attribute vec4 aVertexPosition;
@@ -41,7 +82,7 @@ function main() {
 
     const shaderProgram = initShaderProgram(gl, vertex_shader_source, fragment_shader_source)
 
-    const programInfo = {
+    return {
         program: shaderProgram,
         attribLocations: {
             vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
@@ -53,29 +94,18 @@ function main() {
         },
     }
 
-    var buffers = initBuffers(gl)
-
-    function render() {
-        frame++;
-        buffers = movePoints(gl, buffers)
-        drawScene(gl, programInfo, buffers)
-        requestAnimationFrame(render)
-    }
-    requestAnimationFrame(render)
 }
 
 function initBuffers(gl) {
 
     // Positions
     positions = []
-    var a = 5
-    var b = 5
 
     for (var y=0; y<grid_y; y++) {
         for (var x=0; x<grid_x; x++) {
         positions = positions.concat(
-                (x - (grid_x-1)/2) / grid_x * a,
-                ((grid_y-1)/2 - y) / grid_y * b,
+                (x - (grid_x-1)/2) / grid_x * size_x,
+                ((grid_y-1)/2 - y) / grid_y * size_y,
                 0
             )
         }
@@ -133,15 +163,12 @@ function initBuffers(gl) {
 function movePoints(gl, buffers) {
 
     var positions_new = []
-    var a = 5
-    var b = 5
-    var i = 0
 
     for (var y=0; y<grid_y; y++) {
         for (var x=0; x<grid_x; x++) {
         positions_new = positions_new.concat(
-                (x - (grid_x-1)/2) / grid_x * a,
-                ((grid_y-1)/2 - y) / grid_y * b,
+                (x - (grid_x-1)/2) / grid_x * size_x,
+                ((grid_y-1)/2 - y) / grid_y * size_y,
                 noise.simplex2(x/18 + frame/200, y/18 + frame/200)/4
             )
         }
