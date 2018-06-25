@@ -30,16 +30,20 @@ function main() {
 }
 
 function preparePoints() {
-    
+    coordinates = new Array(grid_x * grid_y)
+    var i = 0
+
     for (var y=0; y<grid_y; y++) {
         for (var x=0; x<grid_x; x++) {
-            coordinates = coordinates.concat({
+            coordinates[i] = {
                 x: (x - (grid_x-1)/2) / grid_x * size_x,
                 y: ((grid_y-1)/2 - y) / grid_y * size_y,
                 z: 0
-            })
+            }
+            i++
         }
     }
+
     return 
 }
 
@@ -97,13 +101,16 @@ function prepareProgram(gl) {
 }
 
 function coordinatesToPositions() {
+
+    positions = new Array(size_x * size_y * 3)
+
     for (var i=0; i<coordinates.length; i++) {
-        positions = positions.concat(
-            coordinates[i].x,
-            coordinates[i].y,
-            coordinates[i].z
-        )
+        positions[3*i+0] = coordinates[i].x
+        positions[3*i+1] = coordinates[i].y
+        positions[3*i+2] = coordinates[i].z
     }
+
+    return
 }
 
 function initBuffers(gl) {
@@ -117,11 +124,7 @@ function initBuffers(gl) {
 
 
     // Colors
-    var colors = []
-
-    for (var i=0; i<positions.length/3; i++) {
-        colors = colors.concat(1,1,1,1)
-    }
+    var colors = new Array(positions.length / 3 * 4).fill(1)
 
     const colorBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
@@ -129,20 +132,29 @@ function initBuffers(gl) {
 
     
     // Indices
-    var indices = []
+    var indices = new Array( (grid_x-1) * (grid_y-1) * 12 )
+    console.log(indices.length)
+    var j = 0
+    var i = 0
 
-    var z = 11
     for (var y=0; y<grid_y-1; y++) {
         for (var x=0; x<grid_x-1; x++) {
-            var i = y * grid_y + x
-            indices = indices.concat(
-                i, i+1,
-                i+1, i+grid_y,
-                i+grid_y, i,
-                i+1, i+grid_y,
-                i+grid_y, i+grid_y+1,
-                i+grid_y+1, i+1
-            )
+            i = y * grid_y + x
+
+            indices[j+0] = i
+            indices[j+1] = i+1
+            indices[j+2] = i+1
+            indices[j+3] = i+grid_y
+            indices[j+4] = i+grid_y
+            indices[j+5] = i
+            indices[j+6] = i+1
+            indices[j+7] = i+grid_y
+            indices[j+8] = i+grid_y
+            indices[j+9] = i+grid_y+1
+            indices[j+10] = i+grid_y+1
+            indices[j+11] = i+1
+
+            j+=12
         }
     }
     const indexBuffer = gl.createBuffer()
